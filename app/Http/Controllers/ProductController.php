@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -11,7 +13,17 @@ class ProductController extends Controller
      */
     public function index()
     {
-        return "This is api listing product";
+        $products = Product::all();
+        return view('products.list', compact('products'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $categories = Category::all();
+        return view('products.create', compact('categories'));
     }
 
     /**
@@ -19,7 +31,15 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        Product::create(
+            [
+                'name' => request()->name,
+                'price' => request()->price,
+                'qty' => request()->qty,
+                'category_id' => request()->category_id,
+            ]
+        );
+        return redirect('/products');
     }
 
     /**
@@ -31,11 +51,33 @@ class ProductController extends Controller
     }
 
     /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        $product = Product::find($id);
+        $categories = Category::all();
+        // dd($product);
+        return view('products.edit', compact('product', 'categories'));
+    }
+
+    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
     {
-        //
+        // dd(request()->all());
+        $product = Product::find($id);
+        $product->update(
+            [
+                'name' => request()->name,
+                'price' => request()->price,
+                'qty' => request()->qty,
+                'category_id' => request()->category_id,
+            ]
+        );
+
+        return redirect('/products');
     }
 
     /**
