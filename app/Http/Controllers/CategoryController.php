@@ -12,8 +12,8 @@ class CategoryController extends Controller
     {
         $categories = Category::orderBy('id', 'desc')->get();
         // dd($categories);
-        $category = Category::find(2);
-        dd($category->products);
+        // $category = Category::find(2);
+        // dd($category->products);
         return view('categories.list', compact('categories'));
     }
 
