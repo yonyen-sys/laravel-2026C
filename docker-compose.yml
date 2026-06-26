@@ -1,0 +1,75 @@
+# Docker Compose — defines all 4 containers your Laravel app needs
+# Usage:
+#   docker compose up -d --build   (start in background, rebuild images)
+#   docker compose down            (stop everything)
+
+services:
+  # --- Container 1: PHP-FPM (runs Laravel/PHP code) ---
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    image: laravel-app
+    container_name: laravel_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html                                 # sync your code into the container
+    networks:
+      - laravel
+    depends_on:
+      - db
+
+  # --- Container 2: Nginx (the web server, port 80) ---
+  webserver:
+    image: nginx:alpine
+    container_name: laravel_nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"                                        # host 8000 → container 80
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - laravel
+    depends_on:
+      - app
+
+  # --- Container 3: MySQL (the database) ---
+  db:
+    image: mysql:8.0
+    container_name: laravel_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: laravel                            # pre-created on first run
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"                                      # host 3306 → container 3306
+    volumes:
+      - dbdata:/var/lib/mysql                            # persist DB across restarts
+    networks:
+      - laravel
+
+  # --- Container 4: phpMyAdmin (database GUI) ---
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: laravel_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8081:80"                                        # host 8081 → container 80
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      - db
+    networks:
+      - laravel
+
+networks:
+  laravel:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local
